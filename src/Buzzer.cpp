@@ -32,7 +32,7 @@ namespace xlab
         targetFrequency_ = frequency;
         startPeriod_ = millis();        
         ledcWriteTone(pwmChannel_, targetFrequency_); 
-        ledcWrite(pwmChannel_, 255);       
+        // ledcWrite(pwmChannel_, 255);       
         playing_ = true;
     }
 
@@ -46,14 +46,14 @@ namespace xlab
 
         if ((millis() - startPeriod_) >= targetDuration_ && playing_ == true) {            
             ledcWriteTone(pwmChannel_, 0); //Stop
-            ledcWrite(pwmChannel_, 255);
+            // ledcWrite(pwmChannel_, 255);
             currentReps_++;
             playing_ = false;
         }
         
         if (currentReps_<=targetReps_ && playing_ == false) {            
-            // ledcWriteTone(pwmChannel_, targetFrequency_);
-            ledcWrite(pwmChannel_, 255);
+            ledcWriteTone(pwmChannel_, targetFrequency_);
+            // ledcWrite(pwmChannel_, 255);
             startPeriod_ = millis();
             playing_ = true;            
         }                  

@@ -9,7 +9,6 @@
 #include "Buzzer.h"
 // #include "Comm.h"
 
-
 const uint8_t HEATER1_PIN = A10;
 const uint8_t HEATER2_PIN = A9;
 const uint8_t HEATER3_PIN = A8;
@@ -17,7 +16,7 @@ const uint8_t TEMPA_PIN = A4;
 const uint8_t TEMPB_PIN = A5;
 const uint8_t TEMPC_PIN = A6;
 const uint8_t BUZZER_PIN = A12;
-const uint8_t LED_PIN = 13;
+const uint8_t LED_PIN = A7;
 
 const float OFFSET_OVEN_A = 14.10;
 const float OFFSET_OVEN_B = 21.5;
@@ -26,7 +25,6 @@ const uint32_t TIME_MS_TO_TEMP_OVEN_A = 60000;
 const uint32_t TIME_MS_TO_TEMP_OVEN_B = 60000;
 
 uint64_t prevPrintTimeStamp = 0;
-
 
 int stableCounter = 0;
 bool steadyState=false;
@@ -47,55 +45,71 @@ xlab::Oven* ovenA = new xlab::Oven(heaterA, tempSensorA, const60, 120, 150, TIME
 xlab::Oven* ovenB = new xlab::Oven(heaterB, tempSensorB, const90, 120, 220, TIME_MS_TO_TEMP_OVEN_B);
 
 
-xlab::Buzzer buzzer = xlab::Buzzer(BUZZER_PIN, 3);
+// xlab::Buzzer* buzzer = new xlab::Buzzer(BUZZER_PIN, 3);
 
 // xlab::Comm comm = xlab::Comm();
 
 void checkForSerialCommands();
+void logEvents();
+void updateState();
 
 void setup() {   
   analogReadResolution(12);
   Serial.begin(115200); 
-  ovenB->setTemp(0);
-  ovenA->setTemp(62.0 + OFFSET_OVEN_A);
+  FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, 1).setCorrection(Typical8mmPixel);  
+  leds[0] = CRGB::White;
+  FastLED.show();
+  delay(500);
   
 
-  FastLED.addLeds<SK6812, LED_PIN, RGB>(leds, 1).setCorrection(Typical8mmPixel);  
-  Serial.println("[Boot] v1.0");
-  leds[0] = CRGB::Red;
+
+  ovenB->setTemp(0);
+  ovenA->setTemp(62.0 + OFFSET_OVEN_A); //Heat the first OVEN.
+  //  ledcSetup(3, 80000, 12);
+  //   ledcAttachPin(BUZZER_PIN, 3);
+  //   ledcWriteTone(3, 500);
+
+  
+  Serial.println("[Boot] v1.1");
+  leds[0] = CRGB::OrangeRed;
   FastLED.show();
-  // comm.setupBLE();
+  // buzzer->play(3000, 1000, 2);
 }
 
 void loop() { 
   ovenA->heartBeat();
   ovenB->heartBeat();
+  // buzzer->heartBeat();
   
-  
-  if (ovenA->isAwaiting() == true && ovenB->isSteady() == false) 
-  {           
-    if (ovenB->isAwaiting() == false && ovenB->getState() == xlab::Oven::State::OFF) {
-      leds[0] = CRGB::Yellow;
-      FastLED.show();
-      Serial.println("# OV_B = Heating");
-      ovenB->setTemp(92.5 + OFFSET_OVEN_B);            
-    } 
-
-    if (ovenB->isSteady() == true) {      
-      leds[0] = CRGB::Green;
-      FastLED.show();
-    }   
-  }
-  
-
-  
-
+  updateState();
   checkForSerialCommands();
+  logEvents();  
+}
+
+// ###################################################
+
+void updateState() 
+{
+  if (ovenA->isAwaiting() == true && ovenB->isSteady() == false) 
+    {           
+      if (ovenB->isAwaiting() == false && ovenB->getState() == xlab::Oven::State::OFF) {
+        leds[0] = CRGB::Yellow;
+        FastLED.show();
+        Serial.println("# OV_B = Heating");
+        ovenB->setTemp(92.5 + OFFSET_OVEN_B);            
+      } 
+
+      if (ovenB->isSteady() == true) {      
+        leds[0] = CRGB::DarkGreen;
+        FastLED.show();
+      }   
+    }
+}
 
 
-  if (millis() - prevPrintTimeStamp > 100) {
-
-    
+void logEvents() 
+{
+  if (millis() - prevPrintTimeStamp > 100) {  
     prevPrintTimeStamp = millis();
 
     String message;
@@ -113,16 +127,8 @@ void loop() {
     // Serial.print(ovenB.getSteadyness()); Serial.print("\t");            
     Serial.println(message);     
     // comm.send(message);
-
-
-
   }
-
-  
-  
 }
-
-
 
 
 void checkForSerialCommands() {
