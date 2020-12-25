@@ -23,9 +23,15 @@ public:
     enum class State
         {
             OFF = 0,
+            WAITING,
             OVEN_60_HEATING,
             OVEN_90_HEATING,
-            READY
+            OVEN_90_TESTING,
+            OVEN_60_TESTING,
+            OVEN_60_TEST_READY,
+            OVEN_90_TEST_READY,
+            OVENS_READY,
+            READY_FOR_TESTING
         };
 
     // Initialize the buzzer with an attached pin as parameter.

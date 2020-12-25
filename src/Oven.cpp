@@ -39,7 +39,7 @@ namespace xlab
 
         currentTemp_ = tempSensor_->readTempDegC(); 
 
-        if ((targetTemp_ - currentTemp_ >= 20) && (state_ != State::OFF)) {
+        if ((targetTemp_ - currentTemp_ >= 17) && (state_ != State::OFF)) {
             heater_->setPower(farMaxPower_);
             state_ = State::PREHEAT;
             return;
@@ -92,7 +92,7 @@ namespace xlab
         beginStabilizationTStamp_ = 0;
         state_ = State::TRANSITION;
         
-        if (targetTemp_ - currentTemp_ >= 20) {
+        if (targetTemp_ - currentTemp_ >= 14) {
             heater_->setPower(farMaxPower_);
             state_ = State::PREHEAT;
         }
